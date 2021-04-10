@@ -166,7 +166,119 @@ public class NFA implements NFAInterface
     @Override
     public DFA getDFA() 
     {
-        // TODO Auto-generated method stub
+        Queue <Set<NFAState>> states = new LinkedList<Set<NFAState>>();
+        Set<NFAState> start = eClosure((NFAState)getStartState());
+        visit.clear(); //We haven't visited any states yet
+        boolean fs;
+        states.add(start);
+        DFA dfa = new DFA();
+
+
+        while(!states.isEmpty()){
+            Set<NFAState> s = states.remove();
+            fs = false;
+            for(NFAState ecs: start){
+                if(ecs.isFinalState())
+                    fs = true;
+                else {
+                    for(String fstring : listFinalStates){
+                        if(ecs.getName().contains(fstring)){
+                            fs = true;
+                            break;
+                        }
+                    }
+                    if(fs){
+                        break;
+                    }
+                }
+            }
+
+            //If start and final state
+            if(dfa.getStartState() == null){
+                StringBuilder str = new StringBuilder();
+                str.append('[');
+                int i = 0;
+                int size = s.size(); 
+                for(NFAState a : s){
+                    str.append(a.getName());
+                    if(i!=size-1){
+                        str.append(", "); //there are more
+                        i++;
+                    }
+                }
+                str.append("]");
+                dfa.addStartState(str.toString());
+                if(fs){
+                    dfa.addFinalState(str.toString());
+                }
+            }
+
+            for(char c : alphabet){
+                Set<NFAState> transitionStates = new HashSet<NFAState>();
+
+                for( NFAState st : s){
+                    Set<NFAState> toStateList = st.getToState(c);
+                    if(toStateList != null){
+                        for(NFAState toState: toStateList){
+                            visit.clear();
+                            Set<NFAState> closureStates = eClosure(toState);
+                            transitionStates.addAll(closureStates); 
+                        }
+                    }
+                }
+
+                StringBuilder str0 = new StringBuilder();
+                str0.append('[');
+                int i = 0;
+                int size = s.size();
+                for(NFAState a: s){
+                    str0.append(a.getName());
+                    if(i!=size-1){
+                        str0.append(", ");
+                        i++;
+                    }
+                }
+                str0.append("]");
+
+                if(transitionStates.toString().equals("[]")){
+                    if(dfaStateExists(transitionStates, dfa)){
+                        dfa.addTransition(str0.toString(), c, transitionStates.toString());
+                    }
+                    else {
+                        dfa.addState("[]");
+                        dfa.addTransition(str0.toString(), c, "[]");
+                        states.add(transitionStates);
+                    }
+                }
+                else if(!dfaStateExists(transitionStates, dfa)){
+                    boolean finalStateChar = false;
+                    states.add(transitionStates);
+                    for(NFAState nfaState : transitionStates){
+                        for(String finalString : listFinalStates){
+                            if(nfaState.getName().contains(finalString)){
+                                finalStateChar = true;
+                                break;
+                            }
+                        }
+
+                        if(finalStateChar){
+                            break;
+                        }
+                    }
+
+                if(finalStateChar){
+                    dfa.addFinalState(transitionStates.toString());
+                }
+                else{
+                    dfa.addState(transitionStates.toString());
+                }
+                }
+
+                dfa.addTransition(str0.toString(), c, transitionStates.toString());
+            }
+        }
+
+
         return null;
     }
 

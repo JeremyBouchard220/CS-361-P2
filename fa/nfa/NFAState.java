@@ -7,15 +7,20 @@ public class NFAState extends State
 {
     private boolean isStart, isFinal;
     private NFAState previousState;
+    private HashMap<Character, LinkedHashSet<NFAState>> delta;
     
     public NFAState(String name)
     {
-        //TODO
+        initDefault(name);
+        isFinal = false;
+        isStart = false;
     }
 
     public NFAState(String name, boolean isStart, boolean isFinal)
     {
-        //TODO
+        initDefault(name);
+        this.isFinal = isFinal;
+        this.isStart = isStart;
     }
 
     public void setStartState(boolean value)
@@ -45,7 +50,7 @@ public class NFAState extends State
     
     public void setPreviousState(NFAState oldState)
     {
-        //TODO
+        previousState = oldState;
     }
 
     public NFAState getPreviousState()
@@ -55,23 +60,41 @@ public class NFAState extends State
     
     public Set<NFAState> getToState(char symb)
     {
-        //TODO
-        return null;
+        LinkedHashSet<NFAState> ret = delta.get(symb);
+        return ret;
     }
     
     private void initDefault(String name)
     {
-        //TODO
+        this.name = name;
+        delta = new HashMap<Character, LinkedHashSet<NFAState>>();
     }
 
     public Set<NFAState> getEStates()
     {
-        //TODO
-        return null;
+        Set returnSet = new LinkedHashSet<>();
+        
+        if(delta.containsKey('e'))
+        {
+            returnSet = delta.get('e');
+        }
+
+        return returnSet;
     }
 
     public void addTransition(char onSymb, NFAState toState)
     {
-        //TODO
+        LinkedHashSet<NFAState> newSet = new LinkedHashSet<>();
+        
+        if(!delta.containsKey(onSymb))
+        {
+            newSet.add(toState);
+            delta.put(onSymb, newSet);
+        }
+        
+        else
+        {
+            delta.get(onSymb).add(toState);
+        }
     }
 }

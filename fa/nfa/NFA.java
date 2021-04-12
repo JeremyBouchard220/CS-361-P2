@@ -4,7 +4,10 @@ import java.util.*;
 import fa.State;
 import fa.dfa.DFA;
 import fa.dfa.DFAState;
-
+/**
+ * @author Sam Jackson and Jeremy Bouchard
+ * Models a Non-Determinant Finite Autonoma
+ */
 public class NFA implements NFAInterface
 {
     private LinkedHashSet<NFAState> Q;
@@ -13,6 +16,9 @@ public class NFA implements NFAInterface
     private LinkedHashSet<String> originalTransitions;
     private Set<String> listFinalStates = new HashSet<String>();
 
+    /**
+     * Manages elements of an NFA
+     */
     public NFA()
     {
         Q = new LinkedHashSet<NFAState>();
@@ -21,6 +27,10 @@ public class NFA implements NFAInterface
         originalTransitions = new LinkedHashSet<String>();
     }
     
+    /**
+     * @param name the name of the state
+     * adds the given state as the start state
+     */
     @Override
     public void addStartState(String name) 
     {
@@ -57,6 +67,10 @@ public class NFA implements NFAInterface
         }
     }
 
+    /**
+     * @param the name of the state being added
+     * Adds an NFA state with the given name.
+     */
     @Override
     public void addState(String name) 
     {
@@ -64,6 +78,11 @@ public class NFA implements NFAInterface
         Q.add(newState);
     }
 
+    /**
+     * @param the name of the final state being added
+     * Adds a new NFA state with the given name,
+     * makes it a final state.
+     */
     @Override
     public void addFinalState(String name) 
     {
@@ -73,10 +92,15 @@ public class NFA implements NFAInterface
         listFinalStates.add(name);
     }
 
+    /**
+     * @param the initial state, the destination state,
+     * and the symbol used to get there.
+     * Creates a transition with the given info.
+     */
     @Override
     public void addTransition(String fromState, char onSymb, String toState) 
     {
-        if(onSymb != 'e')
+        if(onSymb != 'e') //checks to see if symbol is the empty symbol
         {
             alphabet.add(onSymb);
         }
@@ -94,7 +118,7 @@ public class NFA implements NFAInterface
                 
                 for(NFAState temp2 : Q)
                 {
-                    
+
                     if(temp2.getName().equals(toState))
                     {
                         tempState2 = temp2;
@@ -108,6 +132,9 @@ public class NFA implements NFAInterface
         }
     }
 
+    /**
+     * @return a set of all NFA states
+     */
     @Override
     public Set<? extends State> getStates() 
     {
@@ -122,6 +149,9 @@ public class NFA implements NFAInterface
         return states;
     }
 
+    /**
+     * @return a set of final states
+     */
     @Override
     public Set<? extends State> getFinalStates() 
     {
@@ -140,6 +170,9 @@ public class NFA implements NFAInterface
         return finalStates;
     }
 
+    /**
+     * @return the start state
+     */
     @Override
     public State getStartState() 
     {
@@ -157,12 +190,20 @@ public class NFA implements NFAInterface
         return startState;
     }
 
+    /**
+     * @return the alphabet of the NFA
+     */
     @Override
     public Set<Character> getABC() 
     {
         return this.alphabet;
     }
 
+    /**
+     * @return the DFA according to the NFA
+     * Uses the eClosure of the NFA to return
+     * a DFA
+     */
     @Override
     public DFA getDFA() 
     {
@@ -173,10 +214,11 @@ public class NFA implements NFAInterface
         states.add(start);
         DFA dfa = new DFA();
 
-
+        //Main loop, processes each state
         while(!states.isEmpty()){
             Set<NFAState> s = states.remove();
             fs = false;
+            //Checking to see if the state is a final state
             for(NFAState ecs: start){
                 if(ecs.isFinalState())
                     fs = true;
@@ -193,8 +235,9 @@ public class NFA implements NFAInterface
                 }
             }
 
-            //If start and final state
+            //If start state
             if(dfa.getStartState() == null){
+                //Building state strings
                 StringBuilder str = new StringBuilder();
                 str.append('[');
                 int i = 0;
@@ -208,11 +251,11 @@ public class NFA implements NFAInterface
                 }
                 str.append("]");
                 dfa.addStartState(str.toString());
-                if(fs){
+                if(fs){ //If also a final state, add it
                     dfa.addFinalState(str.toString());
                 }
             }
-
+            //looking through the alphabet
             for(char c : alphabet){
                 Set<NFAState> transitionStates = new HashSet<NFAState>();
 
@@ -221,12 +264,13 @@ public class NFA implements NFAInterface
                     if(toStateList != null){
                         for(NFAState toState: toStateList){
                             visit.clear();
+                            //using the eClosure of the NFA
                             Set<NFAState> closureStates = eClosure(toState);
                             transitionStates.addAll(closureStates); 
                         }
                     }
                 }
-
+                //Building state strings
                 StringBuilder str0 = new StringBuilder();
                 str0.append('[');
                 int i = 0;
@@ -239,7 +283,7 @@ public class NFA implements NFAInterface
                     }
                 }
                 str0.append("]");
-
+                //empty state
                 if(transitionStates.toString().equals("[]")){
                     if(dfaStateExists(transitionStates, dfa)){
                         dfa.addTransition(str0.toString(), c, transitionStates.toString());
@@ -266,28 +310,35 @@ public class NFA implements NFAInterface
                         }
                     }
 
-                if(finalStateChar){
-                    dfa.addFinalState(transitionStates.toString());
+                    if(finalStateChar){
+                        dfa.addFinalState(transitionStates.toString());
+                    }
+                    else{
+                        dfa.addState(transitionStates.toString());
+                    }
                 }
-                else{
-                    dfa.addState(transitionStates.toString());
-                }
-                }
-
                 dfa.addTransition(str0.toString(), c, transitionStates.toString());
             }
         }
-
-
-        return null;
+        return dfa;
     }
 
+    /**
+     * @param from state and symbol
+     * @return the state that results from
+     * the beginning state plus the symbol
+     */
     @Override
     public Set<NFAState> getToState(NFAState from, char onSymb) 
     {
         return from.getToState(onSymb);
     }
 
+    /**
+     * @param an NFA state
+     * @return the eClosure
+     * Uses recursion to find the eClosure
+     */
     @Override
     public Set<NFAState> eClosure(NFAState s) 
     {
@@ -307,7 +358,7 @@ public class NFA implements NFAInterface
             {
                 if(!checkVisitState(state))
                 {
-                    returnVal.addAll(eClosure(state));
+                    returnVal.addAll(eClosure(state)); //Recursion!
                 }
             }
             visit.clear();
@@ -315,16 +366,30 @@ public class NFA implements NFAInterface
         }
     }
     
+    /**
+     * @param an NFA state s
+     * @return whether the state has been vistited
+     */
     public boolean checkVisitState(NFAState s)
     {
         return visit.contains(s);
     }
 
+    /**
+     * @param NFA state s
+     * Adds a state to the list of visited
+     * states.
+     */
     private void addVisitState(NFAState s)
     {
         visit.add(s);
     }
 
+    /**
+     * @param checkingStates
+     * @param dfa
+     * @return true if the dfa state does exist
+     */
     private boolean dfaStateExists(Set<NFAState> checkingStates, DFA dfa)
     {
         boolean returnVal = false;

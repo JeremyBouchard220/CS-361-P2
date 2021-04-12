@@ -3,12 +3,21 @@ package fa.nfa;
 import fa.State;
 import java.util.*;
 
+/**
+ * @author Sam Jackson and Jeremy Bouchard
+ * Models a state of a Non-Deterministic Finite
+ * Autonoma
+ */
 public class NFAState extends State
 {
     private boolean isStart, isFinal;
     private NFAState previousState;
     private HashMap<Character, LinkedHashSet<NFAState>> delta;
     
+    /**
+     * Creates a non final, non start NFA state
+     * @param name of the state
+     */
     public NFAState(String name)
     {
         initDefault(name);
@@ -16,6 +25,13 @@ public class NFAState extends State
         isStart = false;
     }
 
+    /**
+     * Creates an NFA that may be a start
+     * or final state (or both)
+     * @param name
+     * @param isStart
+     * @param isFinal
+     */
     public NFAState(String name, boolean isStart, boolean isFinal)
     {
         initDefault(name);
@@ -23,11 +39,17 @@ public class NFAState extends State
         this.isStart = isStart;
     }
 
+    /**
+     * @param value if true, sets this state to start state
+     */
     public void setStartState(boolean value)
     {
         isStart = value;
     }
     
+    /**
+     * @return true if this is a start state
+     */
     public boolean isStartState()
     {
         return isStart;
